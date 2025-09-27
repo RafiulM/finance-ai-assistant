@@ -1,8 +1,42 @@
 import { createSupabaseServerClient } from "@/lib/supabase"
 import { getCurrentUser } from "@/lib/user"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { BadgeDollarSign, TrendingUp, TrendingDown, Calendar, Brain } from "lucide-react"
-import AIInsights from "@/components/ai-insights"
+import { DashboardClient } from "@/components/dashboard-client"
+
+// Helper function to process transactions for chart display
+function processTransactionsForChart(transactions: Array<{
+  amount: number
+  type: 'income' | 'expense'
+  transaction_date: string
+}>) {
+  const monthlyStats = new Map()
+
+  transactions.forEach(transaction => {
+    const date = new Date(transaction.transaction_date)
+    const monthKey = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+
+    if (!monthlyStats.has(monthKey)) {
+      monthlyStats.set(monthKey, { income: 0, expenses: 0, net: 0 })
+    }
+
+    const amount = Number(transaction.amount)
+    if (transaction.type === 'income') {
+      monthlyStats.get(monthKey).income += amount
+      monthlyStats.get(monthKey).net += amount
+    } else {
+      monthlyStats.get(monthKey).expenses += amount
+      monthlyStats.get(monthKey).net -= amount
+    }
+  })
+
+  return Array.from(monthlyStats.entries())
+    .map(([date, data]) => ({
+      date: date,
+      income: Math.round(data.income),
+      expenses: Math.round(data.expenses),
+      net: Math.round(data.net)
+    }))
+    .slice(-6) // Get last 6 months
+}
 
 export default async function DashboardPage() {
   const user = await getCurrentUser()
@@ -36,109 +70,17 @@ export default async function DashboardPage() {
   const netIncome = income - expenses
   const totalAssets = assets?.reduce((sum, a) => sum + Number(a.current_value), 0) || 0
 
-  // Data preparation for potential future use
+  // Prepare monthly transaction data for chart
+  const monthlyData = transactions ? processTransactionsForChart(transactions) : []
 
-  return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Financial Dashboard</h1>
-        <p className="text-muted-foreground">Track your income, expenses, and assets</p>
-      </div>
+  const dashboardData = {
+    income,
+    expenses,
+    netIncome,
+    totalAssets,
+    monthlyData,
+    transactions: transactions || []
+  }
 
-      {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Income</CardTitle>
-            <BadgeDollarSign className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">${income.toFixed(2)}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
-            <BadgeDollarSign className="h-4 w-4 text-red-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">${expenses.toFixed(2)}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Net Income</CardTitle>
-            {netIncome >= 0 ? <TrendingUp className="h-4 w-4 text-green-600" /> : <TrendingDown className="h-4 w-4 text-red-600" />}
-          </CardHeader>
-          <CardContent>
-            <div className={`text-2xl font-bold ${netIncome >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-              ${netIncome.toFixed(2)}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Assets</CardTitle>
-            <BadgeDollarSign className="h-4 w-4 text-blue-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">${totalAssets.toFixed(2)}</div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* AI Insights */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Brain className="h-5 w-5" />
-            AI-Powered Financial Insights
-          </CardTitle>
-          <CardDescription>
-            Personalized suggestions and analysis based on your financial patterns
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <AIInsights />
-        </CardContent>
-      </Card>
-
-      {/* Recent Transactions */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
-            Recent Transactions
-          </CardTitle>
-          <CardDescription>Your latest income and expenses</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            {transactions && transactions.length > 0 ? (
-              transactions.slice(0, 10).map((transaction) => (
-                <div key={transaction.id} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div>
-                    <p className="font-medium">{transaction.description || 'Transaction'}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {transaction.categories?.name} • {new Date(transaction.transaction_date).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className={`font-semibold ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
-                      {transaction.type === 'income' ? '+' : '-'}${Number(transaction.amount).toFixed(2)}
-                    </p>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p className="text-center text-muted-foreground">No transactions yet. Start by logging your first transaction!</p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  )
+  return <DashboardClient data={dashboardData} />
 }

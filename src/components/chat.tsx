@@ -20,17 +20,13 @@ export default function Chat() {
     },
   });
 
+  
   return (
-    <div className="flex flex-col w-full max-w-2xl mx-auto">
-      <div className="mb-6 text-center">
-        <h2 className="text-2xl font-bold mb-2">💰 Finance AI Assistant</h2>
-        <p className="text-gray-600 dark:text-gray-400 text-sm">
-          Track your income and expenses through natural conversation
-        </p>
-      </div>
+    <div className="flex flex-col h-[85vh] max-w-4xl mx-auto mt-4">
 
+      {/* Error Message */}
       {error && (
-        <Card className="p-4 border-red-200 bg-red-50 dark:bg-red-900/20 mb-4">
+        <Card className="p-3 border-red-200 bg-red-50 dark:bg-red-900/20 m-4 mb-2">
           <div className="flex items-center gap-2">
             <AlertCircle className="w-4 h-4 text-red-600" />
             <span className="text-red-700 dark:text-red-300 text-sm">
@@ -41,44 +37,66 @@ export default function Chat() {
         </Card>
       )}
 
-      <div className="space-y-4 mb-4 min-h-[400px] max-h-[600px] overflow-y-auto">
+      {/* Chat Messages Area */}
+      <div className="flex-1 overflow-y-auto px-4 pb-2">
         {messages.length === 0 ? (
-          <Card className="p-6 text-center border-dashed">
-            <Bot className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Start tracking your finances
-            </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Tell me about your income and expenses! Try: &quot;I spent $15 on lunch&quot; or &quot;Got paid $2500 salary&quot;
-            </p>
-          </Card>
+          <div className="flex items-center justify-center h-full">
+            <Card className="p-8 text-center border-dashed max-w-md">
+              <Bot className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="font-semibold text-lg text-gray-700 dark:text-gray-300 mb-2">
+                💰 Finance AI Assistant
+              </h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                Track your income and expenses through natural conversation
+              </p>
+              <p className="text-xs text-gray-400 dark:text-gray-500">
+                Try: &quot;I spent $15 on lunch&quot; or &quot;Got paid $2500 salary&quot;
+              </p>
+            </Card>
+          </div>
         ) : (
           messages.map((m) => (
-            <Card key={m.id} className="p-4">
-              <div className="flex items-center gap-2 mb-2">
-                {m.role === "user" ? (
-                  <User className="w-4 h-4 text-blue-600" />
-                ) : (
-                  <Bot className="w-4 h-4 text-green-600" />
-                )}
-                <span className="font-semibold text-sm">
-                  {m.role === "user" ? "You" : "AI Assistant"}
-                </span>
+            <div
+              key={m.id}
+              className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
+            >
+              <div
+                className={`max-w-[70%] rounded-2xl px-4 py-3 ${
+                  m.role === "user"
+                    ? "bg-blue-600 text-white rounded-br-none"
+                    : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-bl-none"
+                }`}
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  {m.role === "user" ? (
+                    <User className="w-3 h-3 text-blue-200" />
+                  ) : (
+                    <Bot className="w-3 h-3 text-gray-500 dark:text-gray-400" />
+                  )}
+                  <span className={`text-xs font-medium ${
+                    m.role === "user" ? "text-blue-200" : "text-gray-500 dark:text-gray-400"
+                  }`}>
+                    {m.role === "user" ? "You" : "AI Assistant"}
+                  </span>
+                </div>
+                <div className="whitespace-pre-wrap text-sm leading-relaxed">
+                  {m.content}
+                </div>
               </div>
-              <div className="whitespace-pre-wrap text-sm leading-relaxed pl-6">
-                {m.content}
-              </div>
-            </Card>
+            </div>
           ))
         )}
 
+        {/* Loading Indicator */}
         {chatLoading && (
-          <Card className="p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Bot className="w-4 h-4 text-green-600" />
-              <span className="font-semibold text-sm">AI Assistant</span>
-            </div>
-            <div className="pl-6">
+          <div className="flex justify-start">
+            <div className="max-w-[70%] rounded-2xl px-4 py-3 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-bl-none">
+              <div className="flex items-center gap-2 mb-1">
+                <Bot className="w-3 h-3 text-gray-500 dark:text-gray-400" />
+                <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                  AI Assistant
+                </span>
+              </div>
               <div className="flex space-x-1">
                 <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
                 <div
@@ -91,22 +109,25 @@ export default function Chat() {
                 ></div>
               </div>
             </div>
-          </Card>
+          </div>
         )}
       </div>
 
-      <form onSubmit={handleSubmit} className="flex space-x-2">
-        <Input
-          value={input}
-          placeholder="Describe your income or expense..."
-          onChange={handleInputChange}
-          className="flex-1"
-          disabled={chatLoading}
-        />
-        <Button type="submit" disabled={chatLoading || !input.trim()}>
-          {chatLoading ? "Sending..." : "Send"}
-        </Button>
-      </form>
+      {/* Input Form */}
+      <div className="p-4 border-t bg-background">
+        <form onSubmit={handleSubmit} className="flex space-x-2">
+          <Input
+            value={input}
+            placeholder="Describe your income or expense..."
+            onChange={handleInputChange}
+            className="flex-1"
+            disabled={chatLoading}
+          />
+          <Button type="submit" disabled={chatLoading || !input.trim()}>
+            {chatLoading ? "Sending..." : "Send"}
+          </Button>
+        </form>
+      </div>
     </div>
   );
 }

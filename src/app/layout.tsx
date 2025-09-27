@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Parkinsans } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { ThemeProvider } from "@/components/theme-provider";
+import { CurrencyProvider } from "@/lib/currency-context";
+import Navbar from "@/components/navbar";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -20,9 +22,8 @@ const parkinsans = Parkinsans({
 });
 
 export const metadata: Metadata = {
-  title: "CodeGuide Starter Kit",
-  description:
-    "A modern Next.js starter with TypeScript, TailwindCSS, shadcn/ui, Vercel AI SDK, Clerk, and Supabase",
+  title: "Finance AI Assistant",
+  description: "Track your finances with AI-powered conversation",
 };
 
 export default function RootLayout({
@@ -42,7 +43,10 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            {children}
+            <CurrencyProvider>
+              <Navbar />
+              {children}
+            </CurrencyProvider>
           </ThemeProvider>
         </body>
       </html>
