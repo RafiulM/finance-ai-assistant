@@ -4,20 +4,9 @@ import { useChat } from "ai/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { checkEnvironmentVariables } from "@/lib/env-check";
-import SetupGuide from "@/components/setup-guide";
 import { AlertCircle, Bot, User } from "lucide-react";
-import { useState, useEffect } from "react";
 
 export default function Chat() {
-  const [envStatus, setEnvStatus] = useState({
-    clerk: false,
-    supabase: false,
-    ai: false,
-    allConfigured: false,
-  });
-  const [isLoading, setIsLoading] = useState(true);
-
   const {
     messages,
     input,
@@ -31,47 +20,12 @@ export default function Chat() {
     },
   });
 
-  useEffect(() => {
-    const status = checkEnvironmentVariables();
-    setEnvStatus(status);
-    setIsLoading(false);
-  }, []);
-
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center py-24">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-      </div>
-    );
-  }
-
-  if (!envStatus.ai) {
-    return (
-      <div className="max-w-4xl mx-auto">
-        <Card className="p-6 border-amber-200 bg-amber-50 dark:bg-amber-900/20 mb-6">
-          <div className="flex items-center gap-3 mb-3">
-            <AlertCircle className="w-5 h-5 text-amber-600" />
-            <h3 className="font-semibold text-amber-800 dark:text-amber-400">
-              AI Chat Not Available
-            </h3>
-          </div>
-          <p className="text-amber-700 dark:text-amber-300 text-sm">
-            The AI chat feature requires an OpenAI API key to be configured.
-            Please set up your environment variables to enable this
-            functionality.
-          </p>
-        </Card>
-        <SetupGuide envStatus={envStatus} />
-      </div>
-    );
-  }
-
   return (
     <div className="flex flex-col w-full max-w-2xl mx-auto">
       <div className="mb-6 text-center">
-        <h2 className="text-2xl font-bold mb-2">🤖 AI Chat</h2>
+        <h2 className="text-2xl font-bold mb-2">💰 Finance AI Assistant</h2>
         <p className="text-gray-600 dark:text-gray-400 text-sm">
-          Powered by OpenAI GPT-4o • Protected by Clerk Authentication
+          Track your income and expenses through natural conversation
         </p>
       </div>
 
@@ -92,11 +46,10 @@ export default function Chat() {
           <Card className="p-6 text-center border-dashed">
             <Bot className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <h3 className="font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Start a conversation
+              Start tracking your finances
             </h3>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Ask me anything! I&apos;m here to help with coding, questions, or
-              just chat.
+              Tell me about your income and expenses! Try: &quot;I spent $15 on lunch&quot; or &quot;Got paid $2500 salary&quot;
             </p>
           </Card>
         ) : (
@@ -145,7 +98,7 @@ export default function Chat() {
       <form onSubmit={handleSubmit} className="flex space-x-2">
         <Input
           value={input}
-          placeholder="Type your message..."
+          placeholder="Describe your income or expense..."
           onChange={handleInputChange}
           className="flex-1"
           disabled={chatLoading}
